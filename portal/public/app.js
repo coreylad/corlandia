@@ -5,6 +5,7 @@ const installCommandEl = document.querySelector("#installCommand");
 const copyInstallEl = document.querySelector("#copyInstall");
 
 let apps = [];
+let busyAppId = null;
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({
@@ -27,6 +28,24 @@ async function copyText(text) {
   await navigator.clipboard.writeText(text);
 }
 
+async function changeInstallState(appId, action) {
+  busyAppId = appId;
+  renderApps();
+  const response = await fetch(`/api/apps/${encodeURIComponent(appId)}/${action}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new Error(payload.detail || payload.error || `Could not ${action} app`);
+  }
+  apps = payload.apps;
+  busyAppId = null;
+  renderApps();
+}
+
 function renderApps() {
   const term = searchEl.value.trim().toLowerCase();
   const category = categoryEl.value;
@@ -46,19 +65,23 @@ function renderApps() {
       <p>${escapeHTML(app.tagline)}</p>
       <code>${escapeHTML(app.command)}</code>
       <div class="app-actions">
-        <button class="button primary" data-copy="${escapeHTML(app.command)}">Copy</button>
+        <button class="button primary" data-action="${app.installed ? "uninstall" : "install"}" data-app="${escapeHTML(app.id)}" ${busyAppId === app.id ? "disabled" : ""}>
+          ${busyAppId === app.id ? "Working" : app.installed ? "Uninstall" : "Install"}
+        </button>
         <a class="button" href="${localUrl(app)}">Open</a>
       </div>
     </article>
   `).join("");
 
-  appsEl.querySelectorAll("[data-copy]").forEach((button) => {
+  appsEl.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", async () => {
-      await copyText(button.dataset.copy);
-      button.textContent = "Copied";
-      setTimeout(() => {
-        button.textContent = "Copy";
-      }, 1200);
+      try {
+        await changeInstallState(button.dataset.app, button.dataset.action);
+      } catch (error) {
+        busyAppId = null;
+        renderApps();
+        alert(error.message);
+      }
     });
   });
 }

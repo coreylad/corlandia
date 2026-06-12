@@ -87,6 +87,12 @@ else
   sed -i "s/^CORTOPIA_PORT=.*/CORTOPIA_PORT=${PORT}/" "$INSTALL_DIR/.env"
 fi
 
+if ! grep -q '^CORTOPIA_HOME=' "$INSTALL_DIR/.env"; then
+  echo "CORTOPIA_HOME=${INSTALL_DIR}" >> "$INSTALL_DIR/.env"
+else
+  sed -i "s|^CORTOPIA_HOME=.*|CORTOPIA_HOME=${INSTALL_DIR}|" "$INSTALL_DIR/.env"
+fi
+
 if ! grep -q '^CORTOPIA_APPSTORE_URL=' "$INSTALL_DIR/.env"; then
   echo "CORTOPIA_APPSTORE_URL=${APPSTORE_URL}" >> "$INSTALL_DIR/.env"
 else

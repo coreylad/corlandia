@@ -23,10 +23,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       REDIS_URL: redis://redis:6379
+      CORTOPIA_HOME: ${CORTOPIA_HOME:-/opt/cortopia}
       CORTOPIA_APPSTORE_URL: ${CORTOPIA_APPSTORE_URL:-https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml}
-      ACTIVE_PROFILES: ${COMPOSE_PROFILES:-portal}
     ports:
       - "${CORTOPIA_PORT:-8080}:3000"
+    volumes:
+      - ${CORTOPIA_HOME:-/opt/cortopia}:${CORTOPIA_HOME:-/opt/cortopia}
+      - /var/run/docker.sock:/var/run/docker.sock
     labels:
       cortopia.name: "Cortopia Portal"
       cortopia.category: "system"

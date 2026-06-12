@@ -35,6 +35,7 @@ cortopia logs
 ## What It Includes
 
 - A lightweight Node dashboard with a Redis cache.
+- Apps can be installed and uninstalled directly from the dashboard.
 - A Docker Compose stack for the portal.
 - Optional app profiles for media, downloads, monitoring, and utilities.
 - Persistent config under `data/`.
@@ -50,6 +51,8 @@ curl -fsSL https://raw.githubusercontent.com/coreylad/corlandia/main/install.sh 
 
 Installed apps are managed as Docker Compose services using profiles in `compose.apps.yml`. The CLI validates against the GitHub XML app store, enables apps by updating `data/enabled-apps.env`, then recreates the stack with the selected profiles.
 
+The dashboard can do the same install/uninstall work from the browser. To make that possible, the portal container mounts the Docker socket and the Cortopia install directory. Only run Cortopia on a trusted home network.
+
 Apps are intentionally boring under the hood because boring is what survives at 2 a.m. on a little home server.
 
 ## Dashboard API
@@ -59,4 +62,6 @@ GET /api/health
 GET /api/apps
 GET /api/apps?refresh=1
 GET /api/appstore.xml
+POST /api/apps/:id/install
+POST /api/apps/:id/uninstall
 ```
