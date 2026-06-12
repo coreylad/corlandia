@@ -1,0 +1,97 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: cortopia-jellyfin
+    restart: unless-stopped
+    profiles: ["jellyfin"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./data/jellyfin/config:/config
+      - ./media:/media
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: cortopia-jellyseerr
+    restart: unless-stopped
+    profiles: ["jellyseerr"]
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./data/jellyseerr:/app/config
+
+  navidrome:
+    image: deluan/navidrome:latest
+    container_name: cortopia-navidrome
+    restart: unless-stopped
+    profiles: ["navidrome"]
+    environment:
+      - ND_SCANSCHEDULE=1h
+      - ND_LOGLEVEL=info
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "4533:4533"
+    volumes:
+      - ./data/navidrome:/data
+      - ./music:/music:ro
+
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: cortopia-audiobookshelf
+    restart: unless-stopped
+    profiles: ["audiobookshelf"]
+    ports:
+      - "13378:80"
+    volumes:
+      - ./audiobooks:/audiobooks
+      - ./podcasts:/podcasts
+      - ./data/audiobookshelf/config:/config
+      - ./data/audiobookshelf/metadata:/metadata
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: cortopia-qbittorrent
+    restart: unless-stopped
+    profiles: ["qbittorrent"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+      - WEBUI_PORT=8081
+    ports:
+      - "8081:8081"
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - ./data/qbittorrent:/config
+      - ./downloads:/downloads
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: cortopia-uptime-kuma
+    restart: unless-stopped
+    profiles: ["uptime-kuma"]
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data/uptime-kuma:/app/data
+
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: cortopia-filebrowser
+    restart: unless-stopped
+    profiles: ["filebrowser"]
+    ports:
+      - "8095:80"
+    volumes:
+      - ./:/srv
+      - ./data/filebrowser/database.db:/database.db
+      - ./data/filebrowser/settings.json:/config/settings.json
+

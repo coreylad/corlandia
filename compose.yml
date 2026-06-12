@@ -1,0 +1,32 @@
+name: cortopia
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: cortopia-redis
+    restart: unless-stopped
+    profiles: ["portal"]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    labels:
+      cortopia.name: "Cortopia Redis"
+      cortopia.category: "system"
+
+  portal:
+    build:
+      context: ./portal
+    container_name: cortopia-portal
+    restart: unless-stopped
+    profiles: ["portal"]
+    depends_on:
+      - redis
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      CORTOPIA_APPSTORE_URL: ${CORTOPIA_APPSTORE_URL:-https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml}
+      ACTIVE_PROFILES: ${COMPOSE_PROFILES:-portal}
+    ports:
+      - "${CORTOPIA_PORT:-8080}:3000"
+    labels:
+      cortopia.name: "Cortopia Portal"
+      cortopia.category: "system"

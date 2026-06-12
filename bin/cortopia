@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="${CORTOPIA_HOME:-/opt/cortopia}"
+ENV_FILE="$ROOT/.env"
+PROFILE_FILE="$ROOT/data/enabled-apps.env"
+
+compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    echo "docker compose"
+  elif command -v docker-compose >/dev/null 2>&1; then
+    echo "docker-compose"
+  else
+    echo "Docker Compose is required." >&2
+    exit 1
+  fi
+}
+
+require_root() {
+  if [ ! -d "$ROOT" ]; then
+    echo "Cortopia is not installed at $ROOT"
+    echo "Set CORTOPIA_HOME or rerun install.sh."
+    exit 1
+  fi
+}
+
+profiles() {
+  mkdir -p "$(dirname "$PROFILE_FILE")"
+  if [ ! -f "$PROFILE_FILE" ]; then
+    printf 'COMPOSE_PROFILES=portal\n' > "$PROFILE_FILE"
+  fi
+  grep '^COMPOSE_PROFILES=' "$PROFILE_FILE" | cut -d= -f2-
+}
+
+save_profiles() {
+  printf 'COMPOSE_PROFILES=%s\n' "$1" > "$PROFILE_FILE"
+}
+
+has_app() {
+  fetch_appstore | grep -q "<app id=\"$1\">"
+}
+
+appstore_url() {
+  if [ -f "$ENV_FILE" ] && grep -q '^CORTOPIA_APPSTORE_URL=' "$ENV_FILE"; then
+    grep '^CORTOPIA_APPSTORE_URL=' "$ENV_FILE" | cut -d= -f2-
+  else
+    echo "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml"
+  fi
+}
+
+fetch_appstore() {
+  local url
+  url="$(appstore_url)"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -qO- "$url"
+  else
+    echo "curl or wget is required to read the GitHub app store XML." >&2
+    exit 1
+  fi
+}
+
+compose_up() {
+  local compose
+  compose="$(compose_cmd)"
+  cd "$ROOT"
+  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d
+}
+
+usage() {
+  cat <<'USAGE'
+cortopia <command>
+
+Commands:
+  status              Show running containers
+  apps                List available apps
+  enabled             List enabled app profiles
+  install <app>       Enable and start an app
+  uninstall <app>     Disable an app and remove its container
+  restart             Recreate enabled services
+  logs [service]      Follow logs
+  url                 Print the portal URL
+USAGE
+}
+
+cmd="${1:-help}"
+case "$cmd" in
+  help|-h|--help)
+    usage
+    ;;
+  status)
+    require_root
+    cd "$ROOT"
+    $(compose_cmd) -f compose.yml -f compose.apps.yml ps
+    ;;
+  apps)
+    require_root
+    fetch_appstore | sed -n 's/.*<app id="\([^"]*\)">.*/\1/p'
+    ;;
+  enabled)
+    require_root
+    profiles | tr ',' '\n'
+    ;;
+  install)
+    require_root
+    app="${2:-}"
+    if [ -z "$app" ]; then
+      echo "Choose an app: cortopia apps"
+      exit 1
+    fi
+    has_app "$app" || {
+      echo "Unknown app: $app"
+      echo "Available apps:"
+      "$0" apps
+      exit 1
+    }
+    current="$(profiles)"
+    case ",$current," in
+      *",$app,"*) echo "$app is already enabled." ;;
+      *) save_profiles "${current},${app}" ;;
+    esac
+    compose_up
+    echo "$app is installed."
+    ;;
+  uninstall)
+    require_root
+    app="${2:-}"
+    if [ -z "$app" ]; then
+      echo "Choose an app to uninstall."
+      exit 1
+    fi
+    current="$(profiles)"
+    next="$(printf '%s' "$current" | tr ',' '\n' | grep -v "^${app}$" | paste -sd, -)"
+    save_profiles "${next:-portal}"
+    cd "$ROOT"
+    $(compose_cmd) --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d --remove-orphans
+    $(compose_cmd) -f compose.yml -f compose.apps.yml rm -sf "$app" >/dev/null 2>&1 || true
+    echo "$app is disabled."
+    ;;
+  restart)
+    require_root
+    compose_up
+    ;;
+  logs)
+    require_root
+    service="${2:-}"
+    cd "$ROOT"
+    $(compose_cmd) -f compose.yml -f compose.apps.yml logs -f ${service}
+    ;;
+  url)
+    require_root
+    port="$(grep '^CORTOPIA_PORT=' "$ENV_FILE" | cut -d= -f2- || printf '8080')"
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}' || printf 'SERVER_IP')"
+    echo "http://${ip}:${port:-8080}"
+    ;;
+  *)
+    usage
+    exit 1
+    ;;
+esac

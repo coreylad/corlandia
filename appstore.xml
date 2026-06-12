@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<appstore version="1">
+  <app id="jellyfin">
+    <name>Jellyfin</name>
+    <category>Media</category>
+    <tagline>Your movies and shows, streamed from home.</tagline>
+    <port>8096</port>
+    <path></path>
+    <weight>Medium</weight>
+    <command>cortopia install jellyfin</command>
+  </app>
+  <app id="jellyseerr">
+    <name>Jellyseerr</name>
+    <category>Requests</category>
+    <tagline>Let family request movies and shows without texting you at midnight.</tagline>
+    <port>5055</port>
+    <path></path>
+    <weight>Light</weight>
+    <command>cortopia install jellyseerr</command>
+  </app>
+  <app id="navidrome">
+    <name>Navidrome</name>
+    <category>Music</category>
+    <tagline>A fast personal music server that sips resources.</tagline>
+    <port>4533</port>
+    <path></path>
+    <weight>Light</weight>
+    <command>cortopia install navidrome</command>
+  </app>
+  <app id="audiobookshelf">
+    <name>Audiobookshelf</name>
+    <category>Audio</category>
+    <tagline>Audiobooks and podcasts with polished mobile clients.</tagline>
+    <port>13378</port>
+    <path></path>
+    <weight>Medium</weight>
+    <command>cortopia install audiobookshelf</command>
+  </app>
+  <app id="qbittorrent">
+    <name>qBittorrent</name>
+    <category>Downloads</category>
+    <tagline>A clean download client with a web UI.</tagline>
+    <port>8081</port>
+    <path></path>
+    <weight>Light</weight>
+    <command>cortopia install qbittorrent</command>
+  </app>
+  <app id="uptime-kuma">
+    <name>Uptime Kuma</name>
+    <category>Monitoring</category>
+    <tagline>Pretty uptime checks for everything running in the lab.</tagline>
+    <port>3001</port>
+    <path></path>
+    <weight>Light</weight>
+    <command>cortopia install uptime-kuma</command>
+  </app>
+  <app id="filebrowser">
+    <name>File Browser</name>
+    <category>Files</category>
+    <tagline>Browse and manage server files from the couch.</tagline>
+    <port>8095</port>
+    <path></path>
+    <weight>Light</weight>
+    <command>cortopia install filebrowser</command>
+  </app>
+</appstore>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cortopia Homelab</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Cortopia Homelab</p>
+          <h1>Your home server, dressed like an operating system.</h1>
+          <p class="hero-copy">Launch media, install apps, and keep the whole little machine understandable from one calm dashboard.</p>
+          <div class="actions">
+            <a class="button primary" href="#appstore">Open App Store</a>
+            <button class="button" id="copyInstall">Copy Install Command</button>
+          </div>
+        </div>
+        <div class="status-panel" aria-label="Server status">
+          <span class="pulse"></span>
+          <strong>Portal Online</strong>
+          <p>Static, fast, and friendly to low-powered boxes.</p>
+        </div>
+      </section>
+
+      <section class="quick-links" aria-label="Quick links">
+        <a href="/api/apps">App Store API</a>
+        <a href="#commands">Commands</a>
+        <a href="#appstore">App Store</a>
+      </section>
+
+      <section id="appstore" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">App Store</p>
+          <h2>Install the good stuff</h2>
+        </div>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search apps">
+          <select id="category">
+            <option value="all">All categories</option>
+          </select>
+        </div>
+        <div id="apps" class="app-grid"></div>
+      </section>
+
+      <section id="commands" class="section command-strip">
+        <div>
+          <p class="eyebrow">Terminal</p>
+          <h2>One command from GitHub</h2>
+        </div>
+        <code id="installCommand">curl -fsSL https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/install.sh | CORTOPIA_REPO=YOUR_USER/YOUR_REPO bash</code>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
