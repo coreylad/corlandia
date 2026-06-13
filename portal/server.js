@@ -268,9 +268,10 @@ async function startBackgroundUpdate() {
     `cd ${home}`,
     `echo "==> Cortopia update started at $(date -Is)" > ${log}`,
     `git -c safe.directory=${home} fetch origin ${branch} >> ${log} 2>&1`,
-    `git -c safe.directory=${home} checkout ${branch} >> ${log} 2>&1`,
-    `git -c safe.directory=${home} pull --ff-only origin ${branch} >> ${log} 2>&1`,
-    `docker compose --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --remove-orphans >> ${log} 2>&1`,
+    `git -c safe.directory=${home} checkout -B ${branch} origin/${cortopiaBranch} >> ${log} 2>&1`,
+    `git -c safe.directory=${home} reset --hard origin/${cortopiaBranch} >> ${log} 2>&1`,
+    `docker compose --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml build --no-cache portal >> ${log} 2>&1`,
+    `docker compose --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --force-recreate --remove-orphans >> ${log} 2>&1`,
     `echo "==> Cortopia update finished at $(date -Is)" >> ${log}`,
   ].join(" && ");
   const child = spawn("sh", ["-c", command], {

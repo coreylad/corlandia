@@ -65,7 +65,14 @@ compose_up() {
   local compose
   compose="$(compose_cmd)"
   cd "$ROOT"
-  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d --build --remove-orphans
+  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d --build --force-recreate --remove-orphans
+}
+
+rebuild_portal() {
+  local compose
+  compose="$(compose_cmd)"
+  cd "$ROOT"
+  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml build --no-cache portal
 }
 
 usage() {
@@ -143,9 +150,11 @@ case "$cmd" in
     require_root
     cd "$ROOT"
     git -c safe.directory="$ROOT" fetch origin main
-    git -c safe.directory="$ROOT" pull --ff-only origin main
+    git -c safe.directory="$ROOT" checkout -B main origin/main
+    git -c safe.directory="$ROOT" reset --hard origin/main
+    rebuild_portal
     compose_up
-    echo "Cortopia is updated."
+    echo "Cortopia is updated to $(git -c safe.directory="$ROOT" rev-parse --short HEAD)."
     ;;
   restart)
     require_root

@@ -428,6 +428,15 @@ input {
   box-shadow: var(--shadow);
 }
 
+.build-stamp {
+  position: fixed;
+  left: 10px;
+  bottom: 8px;
+  z-index: 10;
+  color: #566174;
+  font-size: 0.72rem;
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;

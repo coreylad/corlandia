@@ -7,6 +7,7 @@ BRANCH="${CORTOPIA_BRANCH:-main}"
 REPO_SLUG="${CORTOPIA_REPO:-YOUR_USER/YOUR_REPO}"
 REPO_URL="${CORTOPIA_REPO_URL:-https://github.com/${REPO_SLUG}.git}"
 APPSTORE_URL="${CORTOPIA_APPSTORE_URL:-https://raw.githubusercontent.com/${REPO_SLUG}/${BRANCH}/appstore.xml}"
+INSTALLER_VERSION="2026-06-13-force-reset-rebuild"
 
 have_cmd() {
   command -v "$1" >/dev/null 2>&1
@@ -138,28 +139,44 @@ as_root_copy() {
   fi
 }
 
+run_git() {
+  if [ -w "$INSTALL_DIR" ]; then
+    git -C "$INSTALL_DIR" -c safe.directory="$INSTALL_DIR" "$@"
+  elif command -v sudo >/dev/null 2>&1; then
+    sudo git -C "$INSTALL_DIR" -c safe.directory="$INSTALL_DIR" "$@"
+  else
+    echo "Cannot update ${INSTALL_DIR}; it is not writable and sudo is unavailable." >&2
+    exit 1
+  fi
+}
+
+sync_existing_repo() {
+  echo "==> Updating ${INSTALL_DIR}"
+  run_git fetch origin "$BRANCH"
+  run_git checkout -B "$BRANCH" "origin/$BRANCH"
+  run_git reset --hard "origin/$BRANCH"
+  if [ ! -w "$INSTALL_DIR" ] && command -v sudo >/dev/null 2>&1; then
+    sudo chown -R "$USER":"$USER" "$INSTALL_DIR"
+  fi
+}
+
+rebuild_stack() {
+  echo "==> Rebuilding portal image"
+  $COMPOSE --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml build --no-cache portal
+
+  echo "==> Starting portal"
+  $COMPOSE --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --force-recreate --remove-orphans
+}
+
 echo "==> Installing Cortopia Homelab"
-echo "==> Installer version: 2026-06-13-dashboard-rebuild"
+echo "==> Installer version: ${INSTALLER_VERSION}"
 ensure_base_packages
 install_docker
 install_compose
 COMPOSE="$(compose_cmd)"
 
 if [ -d "$INSTALL_DIR/.git" ]; then
-  echo "==> Updating ${INSTALL_DIR}"
-  if [ -w "$INSTALL_DIR" ]; then
-    git -C "$INSTALL_DIR" fetch origin "$BRANCH"
-    git -C "$INSTALL_DIR" checkout "$BRANCH"
-    git -C "$INSTALL_DIR" pull --ff-only origin "$BRANCH"
-  elif command -v sudo >/dev/null 2>&1; then
-    sudo git -C "$INSTALL_DIR" fetch origin "$BRANCH"
-    sudo git -C "$INSTALL_DIR" checkout "$BRANCH"
-    sudo git -C "$INSTALL_DIR" pull --ff-only origin "$BRANCH"
-    sudo chown -R "$USER":"$USER" "$INSTALL_DIR"
-  else
-    echo "Cannot update ${INSTALL_DIR}; it is not writable and sudo is unavailable." >&2
-    exit 1
-  fi
+  sync_existing_repo
 else
   echo "==> Cloning ${REPO_URL} into ${INSTALL_DIR}"
   if [ "$(id -u)" -eq 0 ]; then
@@ -205,12 +222,14 @@ fi
 echo "==> Installing cortopia command"
 as_root_copy "$INSTALL_DIR/bin/cortopia" /usr/local/bin/cortopia
 
-echo "==> Starting portal"
 cd "$INSTALL_DIR"
-$COMPOSE --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --remove-orphans
+rebuild_stack
+
+COMMIT="$(git -C "$INSTALL_DIR" rev-parse --short HEAD 2>/dev/null || true)"
 
 IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
 echo
 echo "Cortopia is live."
 echo "Open: http://${IP:-SERVER_IP}:${PORT}"
+echo "Commit: ${COMMIT:-unknown}"
 echo "Run:  cortopia apps"
