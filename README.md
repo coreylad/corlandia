@@ -8,6 +8,8 @@ A tiny homelab "OS-style" experience for low-powered media servers: one command 
 curl -fsSL https://raw.githubusercontent.com/coreylad/corlandia/main/install.sh | CORTOPIA_REPO=coreylad/corlandia bash
 ```
 
+The installer bootstraps missing prerequisites where possible, including `git`, `curl`, Docker Engine, and Docker Compose. It needs root or `sudo` access to install system packages.
+
 For a custom install directory or port:
 
 ```bash
