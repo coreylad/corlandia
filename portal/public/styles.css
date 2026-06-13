@@ -71,6 +71,25 @@ select {
   font-weight: 900;
 }
 
+.app-icon {
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.app-icon img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
+}
+
+.app-icon span {
+  display: none;
+}
+
+.app-icon.icon-fallback span {
+  display: block;
+}
+
 .brand span,
 .nav a,
 .side-panel p,

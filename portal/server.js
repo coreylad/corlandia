@@ -27,6 +27,15 @@ const parser = new XMLParser({
 let memoryCache = null;
 let redis = null;
 
+const iconSlugMap = {
+  "qbittorrent": "qbittorrent",
+  "calibre-web": "calibre-web",
+  "filebrowser": "filebrowser",
+  "home-assistant": "home-assistant",
+  "paperless-ngx": "paperless-ngx",
+  "uptime-kuma": "uptime-kuma",
+};
+
 async function connectRedis() {
   redis = createClient({ url: redisUrl });
   redis.on("error", (error) => {
@@ -46,6 +55,7 @@ function arrayify(value) {
 }
 
 function normalizeApp(app) {
+  const iconSlug = iconSlugMap[app.id] || app.id;
   return {
     id: app.id,
     name: app.name || app.id,
@@ -57,6 +67,7 @@ function normalizeApp(app) {
     url: app.url || "",
     weight: app.weight || "Light",
     image: app.image || "",
+    icon: app.icon || `https://cdn.jsdelivr.net/gh/selfhst/icons/png/${iconSlug}.png`,
     website: app.website || "",
     repository: app.repository || "",
     docs: app.docs || "",
@@ -129,10 +140,29 @@ async function composePs() {
 }
 
 function latestChartValues(chart) {
+  if (!chart) return {};
   const labels = chart.labels || chart.dimension_names || [];
   const rows = chart.data || [];
   const latest = rows[rows.length - 1] || [];
   return Object.fromEntries(labels.map((label, index) => [label, Number(latest[index]) || 0]));
+}
+
+function chartMap(chartsPayload) {
+  return chartsPayload?.charts || {};
+}
+
+function findChartId(charts, candidates, contextCandidates = []) {
+  for (const candidate of candidates) {
+    if (charts[candidate]) return candidate;
+  }
+
+  const entries = Object.entries(charts);
+  for (const context of contextCandidates) {
+    const match = entries.find(([_id, chart]) => chart.context === context);
+    if (match) return match[0];
+  }
+
+  return "";
 }
 
 async function fetchNetdata(path, params = {}) {
@@ -158,15 +188,34 @@ async function fetchChart(chart, points = 1) {
   });
 }
 
+async function optionalChart(chart, points = 1) {
+  if (!chart) return null;
+  try {
+    return await fetchChart(chart, points);
+  } catch {
+    return null;
+  }
+}
+
 async function netdataMetrics() {
   try {
-    const [info, cpuChart, ramChart, loadChart, diskChart, networkChart] = await Promise.all([
+    const [info, chartsPayload] = await Promise.all([
       fetchNetdata("/api/v1/info"),
-      fetchChart("system.cpu"),
-      fetchChart("system.ram"),
-      fetchChart("system.load"),
-      fetchChart("disk_space._"),
-      fetchChart("system.net"),
+      fetchNetdata("/api/v1/charts"),
+    ]);
+    const charts = chartMap(chartsPayload);
+    const cpuId = findChartId(charts, ["system.cpu"], ["system.cpu"]);
+    const ramId = findChartId(charts, ["system.ram"], ["system.ram"]);
+    const loadId = findChartId(charts, ["system.load"], ["system.load"]);
+    const diskId = findChartId(charts, ["disk_space._", "disk_space./", "disk_space.root"], ["disk.space"]);
+    const networkId = findChartId(charts, ["system.net"], ["system.net"]);
+
+    const [cpuChart, ramChart, loadChart, diskChart, networkChart] = await Promise.all([
+      optionalChart(cpuId),
+      optionalChart(ramId),
+      optionalChart(loadId),
+      optionalChart(diskId),
+      optionalChart(networkId),
     ]);
     const cpu = latestChartValues(cpuChart);
     const ram = latestChartValues(ramChart);
@@ -179,9 +228,18 @@ async function netdataMetrics() {
     const diskTotal = (disk.avail || 0) + (disk.used || 0);
     const diskUsedPercent = diskTotal > 0 ? ((disk.used || 0) / diskTotal) * 100 : 0;
 
+    const available = {
+      cpu: Boolean(cpuChart),
+      memory: Boolean(ramChart),
+      disk: Boolean(diskChart),
+      load: Boolean(loadChart),
+      network: Boolean(networkChart),
+    };
+
     return {
       ok: true,
       netdataUrl,
+      available,
       host: {
         hostname: info.hostname || info.host || "cortopia",
         os: info.os_name || info.host_os_name || "",
@@ -189,26 +247,26 @@ async function netdataMetrics() {
         cores: info.cores_total || info.cpu_cores || null,
       },
       cpu: {
-        usedPercent: Number(cpuUsed.toFixed(1)),
+        usedPercent: available.cpu ? Number(cpuUsed.toFixed(1)) : null,
       },
       memory: {
-        usedPercent: Number(ramUsedPercent.toFixed(1)),
-        usedMiB: Math.round(ram.used || 0),
-        totalMiB: Math.round(ramTotal),
+        usedPercent: available.memory ? Number(ramUsedPercent.toFixed(1)) : null,
+        usedMiB: available.memory ? Math.round(ram.used || 0) : null,
+        totalMiB: available.memory ? Math.round(ramTotal) : null,
       },
       disk: {
-        usedPercent: Number(diskUsedPercent.toFixed(1)),
-        usedGiB: Number(((disk.used || 0) / 1024).toFixed(1)),
-        totalGiB: Number((diskTotal / 1024).toFixed(1)),
+        usedPercent: available.disk ? Number(diskUsedPercent.toFixed(1)) : null,
+        usedGiB: available.disk ? Number(((disk.used || 0) / 1024).toFixed(1)) : null,
+        totalGiB: available.disk ? Number((diskTotal / 1024).toFixed(1)) : null,
       },
       load: {
-        one: Number((load.load1 || 0).toFixed(2)),
-        five: Number((load.load5 || 0).toFixed(2)),
-        fifteen: Number((load.load15 || 0).toFixed(2)),
+        one: available.load ? Number((load.load1 || 0).toFixed(2)) : null,
+        five: available.load ? Number((load.load5 || 0).toFixed(2)) : null,
+        fifteen: available.load ? Number((load.load15 || 0).toFixed(2)) : null,
       },
       network: {
-        receivedKiBps: Number(Math.abs(network.received || 0).toFixed(1)),
-        sentKiBps: Number(Math.abs(network.sent || 0).toFixed(1)),
+        receivedKiBps: available.network ? Number(Math.abs(network.received || 0).toFixed(1)) : null,
+        sentKiBps: available.network ? Number(Math.abs(network.sent || 0).toFixed(1)) : null,
       },
       updatedAt: new Date().toISOString(),
     };

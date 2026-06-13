@@ -165,6 +165,10 @@ function setMeter(element, value) {
   element.style.width = `${safeValue}%`;
 }
 
+function hasNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 function renderMetrics() {
   if (!metrics?.ok) {
     const message = metrics?.error || "Netdata is starting";
@@ -177,21 +181,23 @@ function renderMetrics() {
     return;
   }
 
-  cpuMetricEl.textContent = `${metrics.cpu.usedPercent}%`;
+  cpuMetricEl.textContent = hasNumber(metrics.cpu.usedPercent) ? `${metrics.cpu.usedPercent}%` : "Unavailable";
   setMeter(cpuMeterEl, metrics.cpu.usedPercent);
 
-  memoryMetricEl.textContent = `${metrics.memory.usedPercent}%`;
-  memoryDetailEl.textContent = `${metrics.memory.usedMiB} / ${metrics.memory.totalMiB} MiB`;
+  memoryMetricEl.textContent = hasNumber(metrics.memory.usedPercent) ? `${metrics.memory.usedPercent}%` : "Unavailable";
+  memoryDetailEl.textContent = hasNumber(metrics.memory.usedMiB) ? `${metrics.memory.usedMiB} / ${metrics.memory.totalMiB} MiB` : "Chart not found";
   setMeter(memoryMeterEl, metrics.memory.usedPercent);
 
-  diskMetricEl.textContent = `${metrics.disk.usedPercent}%`;
-  diskDetailEl.textContent = `${metrics.disk.usedGiB} / ${metrics.disk.totalGiB} GiB`;
+  diskMetricEl.textContent = hasNumber(metrics.disk.usedPercent) ? `${metrics.disk.usedPercent}%` : "Unavailable";
+  diskDetailEl.textContent = hasNumber(metrics.disk.usedGiB) ? `${metrics.disk.usedGiB} / ${metrics.disk.totalGiB} GiB` : "Chart not found";
   setMeter(diskMeterEl, metrics.disk.usedPercent);
 
-  loadMetricEl.textContent = `${metrics.load.one} / ${metrics.load.five} / ${metrics.load.fifteen}`;
+  loadMetricEl.textContent = hasNumber(metrics.load.one) ? `${metrics.load.one} / ${metrics.load.five} / ${metrics.load.fifteen}` : "Unavailable";
   hostMetricEl.textContent = [metrics.host.hostname, metrics.host.os].filter(Boolean).join(" - ") || "Netdata host";
 
-  networkMetricEl.textContent = `Down ${metrics.network.receivedKiBps} KiB/s - Up ${metrics.network.sentKiBps} KiB/s`;
+  networkMetricEl.textContent = hasNumber(metrics.network.receivedKiBps)
+    ? `Down ${metrics.network.receivedKiBps} KiB/s - Up ${metrics.network.sentKiBps} KiB/s`
+    : "Chart not found";
   metricsUpdatedEl.textContent = `Updated ${new Date(metrics.updatedAt).toLocaleTimeString()}`;
 }
 
@@ -250,7 +256,10 @@ function renderApps() {
     return `
       <article class="app-card ${app.installed ? "installed" : ""}">
         <div class="app-card-head">
-          <span class="app-icon">${escapeHTML(appInitials(app.name))}</span>
+          <span class="app-icon">
+            <img src="${escapeHTML(app.icon || "")}" alt="" loading="lazy">
+            <span>${escapeHTML(appInitials(app.name))}</span>
+          </span>
           <div>
             <h3>${escapeHTML(app.name)}</h3>
             <span>${escapeHTML(app.category)} - ${escapeHTML(app.weight)}</span>
@@ -277,6 +286,13 @@ function renderApps() {
         renderApps();
       }
     });
+  });
+
+  appsEl.querySelectorAll(".app-icon img").forEach((image) => {
+    image.addEventListener("error", () => {
+      image.hidden = true;
+      image.parentElement.classList.add("icon-fallback");
+    }, { once: true });
   });
 }
 
