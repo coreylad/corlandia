@@ -2,7 +2,7 @@
 set -euo pipefail
 
 INSTALL_DIR="${CORTOPIA_HOME:-/opt/cortopia}"
-PORT="${CORTOPIA_PORT:-8080}"
+PORT="${CORTOPIA_PORT:-80}"
 BRANCH="${CORTOPIA_BRANCH:-main}"
 REPO_SLUG="${CORTOPIA_REPO:-YOUR_USER/YOUR_REPO}"
 REPO_URL="${CORTOPIA_REPO_URL:-https://github.com/${REPO_SLUG}.git}"

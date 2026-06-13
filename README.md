@@ -1,6 +1,6 @@
 # Cortopia Homelab
 
-A tiny homelab "OS-style" experience for low-powered media servers: one command installs a slick Node-powered homepage, a Redis-backed GitHub XML app store, and a `cortopia` command for managing self-hosted apps with Docker Compose.
+A tiny homelab control panel for low-powered media servers: one command installs a Node dashboard, a Redis-backed GitHub XML app store, and a `cortopia` command for managing self-hosted apps with Docker Compose.
 
 ## One-command install
 
@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/coreylad/corlandia/main/install.sh 
 Then open:
 
 ```text
-http://SERVER_IP:8080
+http://SERVER_IP
 ```
 
 ## CLI
