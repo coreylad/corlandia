@@ -65,7 +65,7 @@ compose_up() {
   local compose
   compose="$(compose_cmd)"
   cd "$ROOT"
-  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d
+  $compose --env-file "$ENV_FILE" --env-file "$PROFILE_FILE" -f compose.yml -f compose.apps.yml up -d --build --remove-orphans
 }
 
 usage() {
@@ -78,6 +78,7 @@ Commands:
   enabled             List enabled app profiles
   install <app>       Enable and start an app
   uninstall <app>     Disable an app and remove its container
+  update              Pull latest Corlandia and rebuild dashboard
   restart             Recreate enabled services
   logs [service]      Follow logs
   url                 Print the portal URL
@@ -138,6 +139,14 @@ case "$cmd" in
     $(compose_cmd) -f compose.yml -f compose.apps.yml rm -sf "$app" >/dev/null 2>&1 || true
     echo "$app is disabled."
     ;;
+  update)
+    require_root
+    cd "$ROOT"
+    git -c safe.directory="$ROOT" fetch origin main
+    git -c safe.directory="$ROOT" pull --ff-only origin main
+    compose_up
+    echo "Cortopia is updated."
+    ;;
   restart)
     require_root
     compose_up
@@ -150,9 +159,13 @@ case "$cmd" in
     ;;
   url)
     require_root
-    port="$(grep '^CORTOPIA_PORT=' "$ENV_FILE" | cut -d= -f2- || printf '8080')"
+    port="$(grep '^CORTOPIA_PORT=' "$ENV_FILE" | cut -d= -f2- || printf '80')"
     ip="$(hostname -I 2>/dev/null | awk '{print $1}' || printf 'SERVER_IP')"
-    echo "http://${ip}:${port:-8080}"
+    if [ "${port:-80}" = "80" ]; then
+      echo "http://${ip}"
+    else
+      echo "http://${ip}:${port}"
+    fi
     ;;
   *)
     usage

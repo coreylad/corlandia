@@ -367,7 +367,11 @@ app.use(express.json());
 
 app.use(express.static("public", {
   extensions: ["html"],
-  maxAge: process.env.NODE_ENV === "production" ? "1h" : 0,
+  etag: false,
+  maxAge: 0,
+  setHeaders: (response) => {
+    response.setHeader("Cache-Control", "no-store");
+  },
 }));
 
 app.get("/api/health", async (_request, response) => {

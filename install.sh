@@ -139,7 +139,7 @@ as_root_copy() {
 }
 
 echo "==> Installing Cortopia Homelab"
-echo "==> Installer version: 2026-06-13-prereq-bootstrap"
+echo "==> Installer version: 2026-06-13-dashboard-rebuild"
 ensure_base_packages
 install_docker
 install_compose
@@ -207,7 +207,7 @@ as_root_copy "$INSTALL_DIR/bin/cortopia" /usr/local/bin/cortopia
 
 echo "==> Starting portal"
 cd "$INSTALL_DIR"
-$COMPOSE --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d
+$COMPOSE --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --remove-orphans
 
 IP="$(hostname -I 2>/dev/null | awk '{print $1}' || true)"
 echo

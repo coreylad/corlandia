@@ -31,6 +31,7 @@ cortopia install jellyfin
 cortopia install jellyseerr
 cortopia install navidrome
 cortopia uninstall jellyfin
+cortopia update
 cortopia logs
 ```
 
