@@ -139,6 +139,7 @@ as_root_copy() {
 }
 
 echo "==> Installing Cortopia Homelab"
+echo "==> Installer version: 2026-06-13-prereq-bootstrap"
 ensure_base_packages
 install_docker
 install_compose
