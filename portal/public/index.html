@@ -20,6 +20,8 @@
         <nav class="nav" aria-label="Dashboard sections">
           <a href="#overview">Overview</a>
           <a href="#appstore">App Store</a>
+          <a href="/api/metrics">Metrics API</a>
+          <a href="//SERVER_HOST:19999" id="netdataLink" target="_blank" rel="noreferrer">Netdata</a>
           <a href="/api/apps">Catalog API</a>
           <a href="/api/appstore.xml">XML Feed</a>
         </nav>
@@ -62,6 +64,36 @@
           <article>
             <span>Catalog</span>
             <strong id="catalogState">Loading</strong>
+          </article>
+        </section>
+
+        <section class="metrics" aria-label="System metrics from Netdata">
+          <article class="metric-card">
+            <span>CPU</span>
+            <strong id="cpuMetric">--%</strong>
+            <div class="meter"><span id="cpuMeter"></span></div>
+          </article>
+          <article class="metric-card">
+            <span>Memory</span>
+            <strong id="memoryMetric">--%</strong>
+            <small id="memoryDetail">Waiting for Netdata</small>
+            <div class="meter"><span id="memoryMeter"></span></div>
+          </article>
+          <article class="metric-card">
+            <span>Disk</span>
+            <strong id="diskMetric">--%</strong>
+            <small id="diskDetail">Waiting for Netdata</small>
+            <div class="meter"><span id="diskMeter"></span></div>
+          </article>
+          <article class="metric-card">
+            <span>Load</span>
+            <strong id="loadMetric">--</strong>
+            <small id="hostMetric">Netdata starting...</small>
+          </article>
+          <article class="metric-card wide">
+            <span>Network</span>
+            <strong id="networkMetric">--</strong>
+            <small id="metricsUpdated">Live metrics from Netdata</small>
           </article>
         </section>
 

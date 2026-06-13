@@ -15,6 +15,7 @@ const profileFile = join(cortopiaHome, "data", "enabled-apps.env");
 const updateLogFile = join(cortopiaHome, "data", "update.log");
 const appstoreUrl = process.env.CORTOPIA_APPSTORE_URL || "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml";
 const redisUrl = process.env.REDIS_URL || "redis://redis:6379";
+const netdataUrl = process.env.NETDATA_URL || "http://netdata:19999";
 const cacheTtlSeconds = Number(process.env.APPSTORE_CACHE_TTL_SECONDS || 900);
 const execFileAsync = promisify(execFile);
 const parser = new XMLParser({
@@ -124,6 +125,100 @@ async function composePs() {
     return output.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
   } catch {
     return [];
+  }
+}
+
+function latestChartValues(chart) {
+  const labels = chart.labels || chart.dimension_names || [];
+  const rows = chart.data || [];
+  const latest = rows[rows.length - 1] || [];
+  return Object.fromEntries(labels.map((label, index) => [label, Number(latest[index]) || 0]));
+}
+
+async function fetchNetdata(path, params = {}) {
+  const url = new URL(path, netdataUrl);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+  const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (!response.ok) {
+    throw new Error(`Netdata returned HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+async function fetchChart(chart, points = 1) {
+  return fetchNetdata("/api/v1/data", {
+    chart,
+    after: -120,
+    points,
+    group: "average",
+    format: "json",
+    options: "seconds",
+  });
+}
+
+async function netdataMetrics() {
+  try {
+    const [info, cpuChart, ramChart, loadChart, diskChart, networkChart] = await Promise.all([
+      fetchNetdata("/api/v1/info"),
+      fetchChart("system.cpu"),
+      fetchChart("system.ram"),
+      fetchChart("system.load"),
+      fetchChart("disk_space._"),
+      fetchChart("system.net"),
+    ]);
+    const cpu = latestChartValues(cpuChart);
+    const ram = latestChartValues(ramChart);
+    const load = latestChartValues(loadChart);
+    const disk = latestChartValues(diskChart);
+    const network = latestChartValues(networkChart);
+    const cpuUsed = Math.max(0, Math.min(100, 100 - (cpu.idle || 0)));
+    const ramTotal = (ram.free || 0) + (ram.used || 0) + (ram.cached || 0) + (ram.buffers || 0);
+    const ramUsedPercent = ramTotal > 0 ? ((ram.used || 0) / ramTotal) * 100 : 0;
+    const diskTotal = (disk.avail || 0) + (disk.used || 0);
+    const diskUsedPercent = diskTotal > 0 ? ((disk.used || 0) / diskTotal) * 100 : 0;
+
+    return {
+      ok: true,
+      netdataUrl,
+      host: {
+        hostname: info.hostname || info.host || "cortopia",
+        os: info.os_name || info.host_os_name || "",
+        kernel: info.kernel_name || "",
+        cores: info.cores_total || info.cpu_cores || null,
+      },
+      cpu: {
+        usedPercent: Number(cpuUsed.toFixed(1)),
+      },
+      memory: {
+        usedPercent: Number(ramUsedPercent.toFixed(1)),
+        usedMiB: Math.round(ram.used || 0),
+        totalMiB: Math.round(ramTotal),
+      },
+      disk: {
+        usedPercent: Number(diskUsedPercent.toFixed(1)),
+        usedGiB: Number(((disk.used || 0) / 1024).toFixed(1)),
+        totalGiB: Number((diskTotal / 1024).toFixed(1)),
+      },
+      load: {
+        one: Number((load.load1 || 0).toFixed(2)),
+        five: Number((load.load5 || 0).toFixed(2)),
+        fifteen: Number((load.load15 || 0).toFixed(2)),
+      },
+      network: {
+        receivedKiBps: Number(Math.abs(network.received || 0).toFixed(1)),
+        sentKiBps: Number(Math.abs(network.sent || 0).toFixed(1)),
+      },
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      netdataUrl,
+      error: error.message,
+      updatedAt: new Date().toISOString(),
+    };
   }
 }
 
@@ -293,6 +388,10 @@ app.get("/api/system", async (request, response) => {
       detail: error.message,
     });
   }
+});
+
+app.get("/api/metrics", async (_request, response) => {
+  response.json(await netdataMetrics());
 });
 
 app.post("/api/system/update", async (_request, response) => {

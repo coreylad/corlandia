@@ -106,6 +106,7 @@ select {
 
 .side-panel,
 .stats article,
+.metric-card,
 .update-log,
 .app-card {
   border: 1px solid var(--line);
@@ -220,6 +221,53 @@ h2 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 26px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.metric-card {
+  min-width: 0;
+  padding: 16px;
+}
+
+.metric-card span,
+.metric-card small {
+  display: block;
+  color: var(--muted);
+}
+
+.metric-card strong {
+  display: block;
+  overflow: hidden;
+  margin: 8px 0;
+  font-size: 1.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric-card.wide {
+  grid-column: span 2;
+}
+
+.meter {
+  overflow: hidden;
+  height: 8px;
+  border-radius: 999px;
+  background: #070a0f;
+}
+
+.meter span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  transition: width 180ms ease;
 }
 
 .stats article {
@@ -394,6 +442,14 @@ input {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-card.wide {
+    grid-column: span 2;
+  }
+
   .topbar,
   .section-title {
     align-items: flex-start;
@@ -407,7 +463,12 @@ input {
   }
 
   .stats,
+  .metrics,
   .app-actions {
     grid-template-columns: 1fr;
+  }
+
+  .metric-card.wide {
+    grid-column: auto;
   }
 }

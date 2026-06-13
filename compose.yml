@@ -11,6 +11,33 @@ services:
       cortopia.name: "Cortopia Redis"
       cortopia.category: "system"
 
+  netdata:
+    image: netdata/netdata:stable
+    container_name: cortopia-netdata
+    restart: unless-stopped
+    profiles: ["portal"]
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor=unconfined
+    ports:
+      - "${NETDATA_PORT:-19999}:19999"
+    volumes:
+      - ./data/netdata/config:/etc/netdata
+      - ./data/netdata/lib:/var/lib/netdata
+      - ./data/netdata/cache:/var/cache/netdata
+      - /:/host/root:ro,rslave
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      cortopia.name: "Netdata"
+      cortopia.category: "system"
+
   portal:
     build:
       context: ./portal
@@ -23,6 +50,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       REDIS_URL: redis://redis:6379
+      NETDATA_URL: http://netdata:19999
       CORTOPIA_HOME: ${CORTOPIA_HOME:-/opt/cortopia}
       CORTOPIA_BRANCH: ${CORTOPIA_BRANCH:-main}
       CORTOPIA_APPSTORE_URL: ${CORTOPIA_APPSTORE_URL:-https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml}

@@ -1,6 +1,6 @@
 # Cortopia Homelab
 
-A tiny homelab control panel for low-powered media servers: one command installs a Node dashboard, a Redis-backed GitHub XML app store, and a `cortopia` command for managing self-hosted apps with Docker Compose.
+A tiny homelab control panel for low-powered media servers: one command installs a Node dashboard, Netdata-powered system widgets, a Redis-backed GitHub XML app store, and a `cortopia` command for managing self-hosted apps with Docker Compose.
 
 ## One-command install
 
@@ -37,6 +37,7 @@ cortopia logs
 ## What It Includes
 
 - A lightweight Node dashboard with a Redis cache.
+- System specs and dashboard widgets powered by Netdata.
 - Apps can be installed and uninstalled directly from the dashboard.
 - The dashboard can check for new GitHub versions and update itself.
 - A Docker Compose stack for the portal.
@@ -64,6 +65,7 @@ Apps are intentionally boring under the hood because boring is what survives at 
 
 ```text
 GET /api/health
+GET /api/metrics
 GET /api/system
 GET /api/system?refresh=1
 GET /api/apps

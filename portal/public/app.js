@@ -17,9 +17,23 @@ const updateSystemEl = document.querySelector("#updateSystem");
 const updateLogWrapEl = document.querySelector("#updateLogWrap");
 const updateLogEl = document.querySelector("#updateLog");
 const hideUpdateLogEl = document.querySelector("#hideUpdateLog");
+const netdataLinkEl = document.querySelector("#netdataLink");
+const cpuMetricEl = document.querySelector("#cpuMetric");
+const cpuMeterEl = document.querySelector("#cpuMeter");
+const memoryMetricEl = document.querySelector("#memoryMetric");
+const memoryMeterEl = document.querySelector("#memoryMeter");
+const memoryDetailEl = document.querySelector("#memoryDetail");
+const diskMetricEl = document.querySelector("#diskMetric");
+const diskMeterEl = document.querySelector("#diskMeter");
+const diskDetailEl = document.querySelector("#diskDetail");
+const loadMetricEl = document.querySelector("#loadMetric");
+const hostMetricEl = document.querySelector("#hostMetric");
+const networkMetricEl = document.querySelector("#networkMetric");
+const metricsUpdatedEl = document.querySelector("#metricsUpdated");
 
 let apps = [];
 let system = null;
+let metrics = null;
 let selectedCategory = "all";
 let busyAppId = null;
 
@@ -99,6 +113,11 @@ async function loadSystem({ refresh = false } = {}) {
   renderSystem();
 }
 
+async function loadMetrics() {
+  metrics = await fetchJson("/api/metrics");
+  renderMetrics();
+}
+
 async function changeInstallState(appId, action) {
   busyAppId = appId;
   clearNotice();
@@ -128,7 +147,7 @@ function renderSystem() {
   const local = system.localCommit || "unknown";
   const remote = system.remoteCommit || "unknown";
   if (system.updateAvailable) {
-    versionStatusEl.innerHTML = `Update available<br><small>${escapeHTML(local)} → ${escapeHTML(remote)}</small>`;
+    versionStatusEl.innerHTML = `Update available<br><small>${escapeHTML(local)} -> ${escapeHTML(remote)}</small>`;
     updateSystemEl.disabled = false;
   } else {
     versionStatusEl.innerHTML = `Up to date<br><small>${escapeHTML(local)}</small>`;
@@ -139,6 +158,41 @@ function renderSystem() {
     updateLogEl.textContent = system.updateLog;
     updateLogWrapEl.hidden = false;
   }
+}
+
+function setMeter(element, value) {
+  const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
+  element.style.width = `${safeValue}%`;
+}
+
+function renderMetrics() {
+  if (!metrics?.ok) {
+    const message = metrics?.error || "Netdata is starting";
+    cpuMetricEl.textContent = "--%";
+    memoryMetricEl.textContent = "--%";
+    diskMetricEl.textContent = "--%";
+    loadMetricEl.textContent = "--";
+    networkMetricEl.textContent = "Unavailable";
+    metricsUpdatedEl.textContent = message;
+    return;
+  }
+
+  cpuMetricEl.textContent = `${metrics.cpu.usedPercent}%`;
+  setMeter(cpuMeterEl, metrics.cpu.usedPercent);
+
+  memoryMetricEl.textContent = `${metrics.memory.usedPercent}%`;
+  memoryDetailEl.textContent = `${metrics.memory.usedMiB} / ${metrics.memory.totalMiB} MiB`;
+  setMeter(memoryMeterEl, metrics.memory.usedPercent);
+
+  diskMetricEl.textContent = `${metrics.disk.usedPercent}%`;
+  diskDetailEl.textContent = `${metrics.disk.usedGiB} / ${metrics.disk.totalGiB} GiB`;
+  setMeter(diskMeterEl, metrics.disk.usedPercent);
+
+  loadMetricEl.textContent = `${metrics.load.one} / ${metrics.load.five} / ${metrics.load.fifteen}`;
+  hostMetricEl.textContent = [metrics.host.hostname, metrics.host.os].filter(Boolean).join(" - ") || "Netdata host";
+
+  networkMetricEl.textContent = `Down ${metrics.network.receivedKiBps} KiB/s - Up ${metrics.network.sentKiBps} KiB/s`;
+  metricsUpdatedEl.textContent = `Updated ${new Date(metrics.updatedAt).toLocaleTimeString()}`;
 }
 
 function renderCategories() {
@@ -199,7 +253,7 @@ function renderApps() {
           <span class="app-icon">${escapeHTML(appInitials(app.name))}</span>
           <div>
             <h3>${escapeHTML(app.name)}</h3>
-            <span>${escapeHTML(app.category)} · ${escapeHTML(app.weight)}</span>
+            <span>${escapeHTML(app.category)} - ${escapeHTML(app.weight)}</span>
           </div>
         </div>
         <p>${escapeHTML(app.description || app.tagline)}</p>
@@ -227,8 +281,12 @@ function renderApps() {
 }
 
 async function boot() {
+  netdataLinkEl.href = `http://${window.location.hostname || "SERVER_IP"}:19999`;
   try {
-    await Promise.all([loadApps(), loadSystem()]);
+    await Promise.all([loadApps(), loadSystem(), loadMetrics()]);
+    setInterval(() => {
+      loadMetrics().catch(() => {});
+    }, 10000);
   } catch (error) {
     showNotice(error.message, "error");
     appsEl.innerHTML = `<div class="empty">Could not load the dashboard.</div>`;
