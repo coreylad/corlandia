@@ -5,11 +5,14 @@ import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { spawn } from "node:child_process";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const cortopiaHome = process.env.CORTOPIA_HOME || "/opt/cortopia";
+const cortopiaBranch = process.env.CORTOPIA_BRANCH || "main";
 const profileFile = join(cortopiaHome, "data", "enabled-apps.env");
+const updateLogFile = join(cortopiaHome, "data", "update.log");
 const appstoreUrl = process.env.CORTOPIA_APPSTORE_URL || "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml";
 const redisUrl = process.env.REDIS_URL || "redis://redis:6379";
 const cacheTtlSeconds = Number(process.env.APPSTORE_CACHE_TTL_SECONDS || 900);
@@ -47,9 +50,16 @@ function normalizeApp(app) {
     name: app.name || app.id,
     category: app.category || "Other",
     tagline: app.tagline || "",
+    description: app.description || app.tagline || "",
     port: String(app.port || ""),
     path: app.path || "",
+    url: app.url || "",
     weight: app.weight || "Light",
+    image: app.image || "",
+    website: app.website || "",
+    repository: app.repository || "",
+    docs: app.docs || "",
+    featured: String(app.featured || "false") === "true",
     command: app.command || `cortopia install ${app.id}`,
   };
 }
@@ -95,6 +105,85 @@ async function removeComposeService(appId) {
   } catch {
     // The container may already be gone after compose reconciles profiles.
   }
+}
+
+async function gitOutput(args, timeout = 30000) {
+  const { stdout } = await execFileAsync("git", ["-c", `safe.directory=${cortopiaHome}`, ...args], { cwd: cortopiaHome, timeout });
+  return stdout.trim();
+}
+
+async function composePs() {
+  try {
+    const { stdout } = await execFileAsync("docker", ["compose", "-f", "compose.yml", "-f", "compose.apps.yml", "ps", "--format", "json"], {
+      cwd: cortopiaHome,
+      timeout: 30000,
+    });
+    const output = stdout.trim();
+    if (!output) return [];
+    if (output.startsWith("[")) return JSON.parse(output);
+    return output.split(/\r?\n/).filter(Boolean).map((line) => JSON.parse(line));
+  } catch {
+    return [];
+  }
+}
+
+async function systemStatus({ refresh = false } = {}) {
+  let localCommit = "";
+  let remoteCommit = "";
+  let updateAvailable = false;
+  let updateLog = "";
+
+  try {
+    localCommit = await gitOutput(["rev-parse", "--short", "HEAD"]);
+    if (refresh) {
+      await gitOutput(["fetch", "origin", cortopiaBranch], 60000);
+    }
+    remoteCommit = await gitOutput(["rev-parse", "--short", `origin/${cortopiaBranch}`]);
+    updateAvailable = localCommit !== remoteCommit;
+  } catch (error) {
+    updateLog = `Could not check git status: ${error.message}`;
+  }
+
+  try {
+    updateLog = await readFile(updateLogFile, "utf8");
+  } catch {
+    // No update has been run yet.
+  }
+
+  return {
+    branch: cortopiaBranch,
+    localCommit,
+    remoteCommit,
+    updateAvailable,
+    updateLog: updateLog.slice(-5000),
+    containers: await composePs(),
+  };
+}
+
+function shellQuote(value) {
+  return `'${String(value).replace(/'/g, "'\\''")}'`;
+}
+
+async function startBackgroundUpdate() {
+  await mkdir(dirname(updateLogFile), { recursive: true });
+  const home = shellQuote(cortopiaHome);
+  const branch = shellQuote(cortopiaBranch);
+  const log = shellQuote(updateLogFile);
+  const command = [
+    `cd ${home}`,
+    `echo "==> Cortopia update started at $(date -Is)" > ${log}`,
+    `git -c safe.directory=${home} fetch origin ${branch} >> ${log} 2>&1`,
+    `git -c safe.directory=${home} checkout ${branch} >> ${log} 2>&1`,
+    `git -c safe.directory=${home} pull --ff-only origin ${branch} >> ${log} 2>&1`,
+    `docker compose --env-file .env --env-file data/enabled-apps.env -f compose.yml -f compose.apps.yml up -d --build --remove-orphans >> ${log} 2>&1`,
+    `echo "==> Cortopia update finished at $(date -Is)" >> ${log}`,
+  ].join(" && ");
+  const child = spawn("sh", ["-c", command], {
+    cwd: cortopiaHome,
+    detached: true,
+    stdio: "ignore",
+  });
+  child.unref();
 }
 
 async function getCachedJson() {
@@ -193,6 +282,32 @@ app.get("/api/health", async (_request, response) => {
     appstoreUrl,
     cortopiaHome,
   });
+});
+
+app.get("/api/system", async (request, response) => {
+  try {
+    response.json(await systemStatus({ refresh: request.query.refresh === "1" }));
+  } catch (error) {
+    response.status(500).json({
+      error: "Could not load system status",
+      detail: error.message,
+    });
+  }
+});
+
+app.post("/api/system/update", async (_request, response) => {
+  try {
+    await startBackgroundUpdate();
+    response.json({
+      ok: true,
+      message: "Update started. The dashboard may restart while the new version comes online.",
+    });
+  } catch (error) {
+    response.status(500).json({
+      error: "Could not start update",
+      detail: error.message,
+    });
+  }
 });
 
 app.get("/api/apps", async (request, response) => {

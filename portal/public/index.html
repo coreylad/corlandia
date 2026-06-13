@@ -3,56 +3,102 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cortopia Homelab</title>
+    <title>Cortopia</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="shell">
-      <section class="hero">
-        <div>
-          <p class="eyebrow">Cortopia Homelab</p>
-          <h1>Your home server, dressed like an operating system.</h1>
-          <p class="hero-copy">Launch media, install apps, and keep the whole little machine understandable from one calm dashboard.</p>
-          <div class="actions">
-            <a class="button primary" href="#appstore">Open App Store</a>
-            <button class="button" id="copyInstall">Copy Install Command</button>
+    <main class="layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">C</span>
+          <div>
+            <strong>Corlandia</strong>
+            <span>Homelab panel</span>
           </div>
         </div>
-        <div class="status-panel" aria-label="Server status">
-          <span class="pulse"></span>
-          <strong>Portal Online</strong>
-          <p>Static, fast, and friendly to low-powered boxes.</p>
-        </div>
-      </section>
 
-      <section class="quick-links" aria-label="Quick links">
-        <a href="/api/apps">App Store API</a>
-        <a href="#commands">Commands</a>
-        <a href="#appstore">App Store</a>
-      </section>
+        <nav class="nav" aria-label="Dashboard sections">
+          <a href="#overview">Overview</a>
+          <a href="#appstore">App Store</a>
+          <a href="/api/apps">Catalog API</a>
+          <a href="/api/appstore.xml">XML Feed</a>
+        </nav>
 
-      <section id="appstore" class="section">
-        <div class="section-heading">
-          <p class="eyebrow">App Store</p>
-          <h2>Install the good stuff</h2>
-        </div>
-        <div class="toolbar">
-          <input id="search" type="search" placeholder="Search apps">
-          <select id="category">
-            <option value="all">All categories</option>
-          </select>
-        </div>
-        <div id="apps" class="app-grid"></div>
-      </section>
+        <section class="side-panel" aria-label="System update">
+          <div class="side-panel-heading">
+            <span>System</span>
+            <button class="icon-button" id="checkUpdates" title="Check for updates">Refresh</button>
+          </div>
+          <p id="versionStatus">Checking version...</p>
+          <button class="button primary full" id="updateSystem" disabled>Update Dashboard</button>
+        </section>
+      </aside>
 
-      <section id="commands" class="section command-strip">
-        <div>
-          <p class="eyebrow">Terminal</p>
-          <h2>One command from GitHub</h2>
-        </div>
-        <code id="installCommand">curl -fsSL https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/install.sh | CORTOPIA_REPO=YOUR_USER/YOUR_REPO bash</code>
+      <section class="content">
+        <header id="overview" class="topbar">
+          <div>
+            <p class="eyebrow">Cortopia OS</p>
+            <h1>Run the lab from one panel.</h1>
+          </div>
+          <div class="top-actions">
+            <button class="button" id="refreshCatalog">Refresh App Store</button>
+            <button class="button" id="copyInstall">Copy Install Command</button>
+          </div>
+        </header>
+
+        <section class="stats" aria-label="Homelab status">
+          <article>
+            <span>Available</span>
+            <strong id="availableCount">0</strong>
+          </article>
+          <article>
+            <span>Installed</span>
+            <strong id="installedCount">0</strong>
+          </article>
+          <article>
+            <span>Containers</span>
+            <strong id="containerCount">0</strong>
+          </article>
+          <article>
+            <span>Catalog</span>
+            <strong id="catalogState">Loading</strong>
+          </article>
+        </section>
+
+        <section class="update-log" id="updateLogWrap" hidden>
+          <div class="section-title">
+            <h2>Update Log</h2>
+            <button class="button small" id="hideUpdateLog">Hide</button>
+          </div>
+          <pre id="updateLog"></pre>
+        </section>
+
+        <section id="appstore" class="appstore">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">GitHub XML App Store</p>
+              <h2>Install apps</h2>
+            </div>
+            <code id="installCommand">curl -fsSL https://raw.githubusercontent.com/coreylad/corlandia/main/install.sh | CORTOPIA_REPO=coreylad/corlandia bash</code>
+          </div>
+
+          <div class="filters">
+            <input id="search" type="search" placeholder="Search media, files, monitoring...">
+            <select id="statusFilter">
+              <option value="all">All apps</option>
+              <option value="installed">Installed</option>
+              <option value="available">Available</option>
+            </select>
+            <div id="categories" class="chips" aria-label="Categories"></div>
+          </div>
+
+          <div id="notice" class="notice" hidden></div>
+          <div id="apps" class="app-grid" aria-live="polite"></div>
+        </section>
       </section>
     </main>
+
+    <div id="toast" class="toast" hidden></div>
     <script src="app.js"></script>
   </body>
 </html>

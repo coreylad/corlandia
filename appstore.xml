@@ -1,66 +1,342 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<appstore version="1">
-  <app id="jellyfin">
+<appstore version="2">
+  <app id="jellyfin" featured="true">
     <name>Jellyfin</name>
     <category>Media</category>
-    <tagline>Your movies and shows, streamed from home.</tagline>
+    <tagline>Movies, TV, and live media streamed from your own server.</tagline>
+    <description>A polished open-source media server for your home library.</description>
     <port>8096</port>
     <path></path>
     <weight>Medium</weight>
-    <command>cortopia install jellyfin</command>
+    <image>lscr.io/linuxserver/jellyfin:latest</image>
+    <website>https://jellyfin.org</website>
+    <repository>https://github.com/jellyfin/jellyfin</repository>
+    <docs>https://jellyfin.org/docs</docs>
   </app>
-  <app id="jellyseerr">
+  <app id="jellyseerr" featured="true">
     <name>Jellyseerr</name>
-    <category>Requests</category>
-    <tagline>Let family request movies and shows without texting you at midnight.</tagline>
+    <category>Media</category>
+    <tagline>Movie and show requests for Jellyfin, Sonarr, and Radarr.</tagline>
+    <description>Let family request media from a clean web interface.</description>
     <port>5055</port>
     <path></path>
     <weight>Light</weight>
-    <command>cortopia install jellyseerr</command>
+    <image>fallenbagel/jellyseerr:latest</image>
+    <website>https://docs.jellyseerr.dev</website>
+    <repository>https://github.com/Fallenbagel/jellyseerr</repository>
+    <docs>https://docs.jellyseerr.dev</docs>
   </app>
-  <app id="navidrome">
+  <app id="sonarr">
+    <name>Sonarr</name>
+    <category>Media Automation</category>
+    <tagline>TV library management and episode automation.</tagline>
+    <description>Track shows, monitor releases, and send grabs to your download client.</description>
+    <port>8989</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/sonarr:latest</image>
+    <website>https://sonarr.tv</website>
+    <repository>https://github.com/Sonarr/Sonarr</repository>
+    <docs>https://wiki.servarr.com/sonarr</docs>
+  </app>
+  <app id="radarr">
+    <name>Radarr</name>
+    <category>Media Automation</category>
+    <tagline>Movie library management and release automation.</tagline>
+    <description>Find, upgrade, and organize your movie collection.</description>
+    <port>7878</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/radarr:latest</image>
+    <website>https://radarr.video</website>
+    <repository>https://github.com/Radarr/Radarr</repository>
+    <docs>https://wiki.servarr.com/radarr</docs>
+  </app>
+  <app id="lidarr">
+    <name>Lidarr</name>
+    <category>Media Automation</category>
+    <tagline>Music collection automation for albums and artists.</tagline>
+    <description>Monitor artists and keep your music library organized.</description>
+    <port>8686</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/lidarr:latest</image>
+    <website>https://lidarr.audio</website>
+    <repository>https://github.com/Lidarr/Lidarr</repository>
+    <docs>https://wiki.servarr.com/lidarr</docs>
+  </app>
+  <app id="prowlarr">
+    <name>Prowlarr</name>
+    <category>Media Automation</category>
+    <tagline>Indexer manager for the Servarr stack.</tagline>
+    <description>Manage indexers once and sync them into Sonarr, Radarr, and friends.</description>
+    <port>9696</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/prowlarr:latest</image>
+    <website>https://prowlarr.com</website>
+    <repository>https://github.com/Prowlarr/Prowlarr</repository>
+    <docs>https://wiki.servarr.com/prowlarr</docs>
+  </app>
+  <app id="bazarr">
+    <name>Bazarr</name>
+    <category>Media Automation</category>
+    <tagline>Subtitle automation for movies and TV.</tagline>
+    <description>Download and manage subtitles alongside Sonarr and Radarr.</description>
+    <port>6767</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/bazarr:latest</image>
+    <website>https://www.bazarr.media</website>
+    <repository>https://github.com/morpheus65535/bazarr</repository>
+    <docs>https://wiki.bazarr.media</docs>
+  </app>
+  <app id="qbittorrent">
+    <name>qBittorrent</name>
+    <category>Downloads</category>
+    <tagline>Reliable torrent downloads with a web UI.</tagline>
+    <description>A lightweight download client that pairs well with the Servarr stack.</description>
+    <port>8081</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/qbittorrent:latest</image>
+    <website>https://www.qbittorrent.org</website>
+    <repository>https://github.com/qbittorrent/qBittorrent</repository>
+    <docs>https://github.com/linuxserver/docker-qbittorrent</docs>
+  </app>
+  <app id="sabnzbd">
+    <name>SABnzbd</name>
+    <category>Downloads</category>
+    <tagline>Usenet downloads with a friendly web interface.</tagline>
+    <description>Queue, download, repair, and unpack Usenet releases.</description>
+    <port>8082</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/sabnzbd:latest</image>
+    <website>https://sabnzbd.org</website>
+    <repository>https://github.com/sabnzbd/sabnzbd</repository>
+    <docs>https://sabnzbd.org/wiki</docs>
+  </app>
+  <app id="transmission">
+    <name>Transmission</name>
+    <category>Downloads</category>
+    <tagline>Minimal torrent client for low-power servers.</tagline>
+    <description>A simple torrent client with a clean remote web interface.</description>
+    <port>9091</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/transmission:latest</image>
+    <website>https://transmissionbt.com</website>
+    <repository>https://github.com/transmission/transmission</repository>
+    <docs>https://github.com/linuxserver/docker-transmission</docs>
+  </app>
+  <app id="navidrome" featured="true">
     <name>Navidrome</name>
-    <category>Music</category>
-    <tagline>A fast personal music server that sips resources.</tagline>
+    <category>Audio</category>
+    <tagline>Fast personal music streaming that sips resources.</tagline>
+    <description>Serve your music collection through Subsonic-compatible clients.</description>
     <port>4533</port>
     <path></path>
     <weight>Light</weight>
-    <command>cortopia install navidrome</command>
+    <image>deluan/navidrome:latest</image>
+    <website>https://www.navidrome.org</website>
+    <repository>https://github.com/navidrome/navidrome</repository>
+    <docs>https://www.navidrome.org/docs</docs>
   </app>
   <app id="audiobookshelf">
     <name>Audiobookshelf</name>
     <category>Audio</category>
     <tagline>Audiobooks and podcasts with polished mobile clients.</tagline>
+    <description>Host audiobooks, podcasts, metadata, and progress sync at home.</description>
     <port>13378</port>
     <path></path>
     <weight>Medium</weight>
-    <command>cortopia install audiobookshelf</command>
+    <image>ghcr.io/advplyr/audiobookshelf:latest</image>
+    <website>https://www.audiobookshelf.org</website>
+    <repository>https://github.com/advplyr/audiobookshelf</repository>
+    <docs>https://www.audiobookshelf.org/docs</docs>
   </app>
-  <app id="qbittorrent">
-    <name>qBittorrent</name>
-    <category>Downloads</category>
-    <tagline>A clean download client with a web UI.</tagline>
-    <port>8081</port>
+  <app id="calibre-web">
+    <name>Calibre-Web</name>
+    <category>Books</category>
+    <tagline>A clean web library for ebooks.</tagline>
+    <description>Browse, read, and manage an ebook library from the browser.</description>
+    <port>8083</port>
     <path></path>
     <weight>Light</weight>
-    <command>cortopia install qbittorrent</command>
-  </app>
-  <app id="uptime-kuma">
-    <name>Uptime Kuma</name>
-    <category>Monitoring</category>
-    <tagline>Pretty uptime checks for everything running in the lab.</tagline>
-    <port>3001</port>
-    <path></path>
-    <weight>Light</weight>
-    <command>cortopia install uptime-kuma</command>
+    <image>lscr.io/linuxserver/calibre-web:latest</image>
+    <website>https://github.com/janeczku/calibre-web</website>
+    <repository>https://github.com/janeczku/calibre-web</repository>
+    <docs>https://github.com/linuxserver/docker-calibre-web</docs>
   </app>
   <app id="filebrowser">
     <name>File Browser</name>
     <category>Files</category>
     <tagline>Browse and manage server files from the couch.</tagline>
+    <description>Simple web file management for your Cortopia install directory.</description>
     <port>8095</port>
     <path></path>
     <weight>Light</weight>
-    <command>cortopia install filebrowser</command>
+    <image>filebrowser/filebrowser:latest</image>
+    <website>https://filebrowser.org</website>
+    <repository>https://github.com/filebrowser/filebrowser</repository>
+    <docs>https://filebrowser.org/installation</docs>
+  </app>
+  <app id="nextcloud">
+    <name>Nextcloud</name>
+    <category>Files</category>
+    <tagline>Personal cloud files, sync, calendars, and contacts.</tagline>
+    <description>A larger app, but useful when you want a full private cloud.</description>
+    <port>8084</port>
+    <path></path>
+    <weight>Heavy</weight>
+    <image>nextcloud:apache</image>
+    <website>https://nextcloud.com</website>
+    <repository>https://github.com/nextcloud/server</repository>
+    <docs>https://docs.nextcloud.com</docs>
+  </app>
+  <app id="syncthing">
+    <name>Syncthing</name>
+    <category>Files</category>
+    <tagline>Continuous peer-to-peer file sync.</tagline>
+    <description>Sync folders between devices without a central cloud provider.</description>
+    <port>8384</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>lscr.io/linuxserver/syncthing:latest</image>
+    <website>https://syncthing.net</website>
+    <repository>https://github.com/syncthing/syncthing</repository>
+    <docs>https://docs.syncthing.net</docs>
+  </app>
+  <app id="photoprism">
+    <name>PhotoPrism</name>
+    <category>Photos</category>
+    <tagline>AI-assisted photo library for your pictures.</tagline>
+    <description>Browse, index, and search personal photos from your server.</description>
+    <port>2342</port>
+    <path></path>
+    <weight>Heavy</weight>
+    <image>photoprism/photoprism:latest</image>
+    <website>https://www.photoprism.app</website>
+    <repository>https://github.com/photoprism/photoprism</repository>
+    <docs>https://docs.photoprism.app</docs>
+  </app>
+  <app id="uptime-kuma" featured="true">
+    <name>Uptime Kuma</name>
+    <category>Monitoring</category>
+    <tagline>Pretty uptime checks for everything running in the lab.</tagline>
+    <description>Monitor services, ports, websites, and get alerts when things break.</description>
+    <port>3001</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>louislam/uptime-kuma:1</image>
+    <website>https://uptime.kuma.pet</website>
+    <repository>https://github.com/louislam/uptime-kuma</repository>
+    <docs>https://github.com/louislam/uptime-kuma/wiki</docs>
+  </app>
+  <app id="homepage">
+    <name>Homepage</name>
+    <category>Monitoring</category>
+    <tagline>A fast, configurable service dashboard.</tagline>
+    <description>Build a compact status homepage for all the services you run.</description>
+    <port>3002</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>ghcr.io/gethomepage/homepage:latest</image>
+    <website>https://gethomepage.dev</website>
+    <repository>https://github.com/gethomepage/homepage</repository>
+    <docs>https://gethomepage.dev/latest</docs>
+  </app>
+  <app id="dozzle">
+    <name>Dozzle</name>
+    <category>Monitoring</category>
+    <tagline>Live Docker container logs in the browser.</tagline>
+    <description>Quickly inspect logs for your homelab containers.</description>
+    <port>9999</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>amir20/dozzle:latest</image>
+    <website>https://dozzle.dev</website>
+    <repository>https://github.com/amir20/dozzle</repository>
+    <docs>https://dozzle.dev/guide/getting-started</docs>
+  </app>
+  <app id="portainer">
+    <name>Portainer CE</name>
+    <category>Docker</category>
+    <tagline>Container management UI for Docker.</tagline>
+    <description>Inspect containers, images, volumes, and stacks from a web console.</description>
+    <port>9443</port>
+    <path></path>
+    <url>https://{host}:9443</url>
+    <weight>Medium</weight>
+    <image>portainer/portainer-ce:latest</image>
+    <website>https://www.portainer.io</website>
+    <repository>https://github.com/portainer/portainer</repository>
+    <docs>https://docs.portainer.io</docs>
+  </app>
+  <app id="watchtower">
+    <name>Watchtower</name>
+    <category>Docker</category>
+    <tagline>Automatic container image updates.</tagline>
+    <description>Periodically check and update running containers.</description>
+    <port></port>
+    <path></path>
+    <weight>Light</weight>
+    <image>containrrr/watchtower:latest</image>
+    <website>https://containrrr.dev/watchtower</website>
+    <repository>https://github.com/containrrr/watchtower</repository>
+    <docs>https://containrrr.dev/watchtower</docs>
+  </app>
+  <app id="vaultwarden">
+    <name>Vaultwarden</name>
+    <category>Security</category>
+    <tagline>Lightweight Bitwarden-compatible password vault.</tagline>
+    <description>Run a private password manager backend at home.</description>
+    <port>8085</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>vaultwarden/server:latest</image>
+    <website>https://github.com/dani-garcia/vaultwarden</website>
+    <repository>https://github.com/dani-garcia/vaultwarden</repository>
+    <docs>https://github.com/dani-garcia/vaultwarden/wiki</docs>
+  </app>
+  <app id="paperless-ngx">
+    <name>Paperless-ngx</name>
+    <category>Productivity</category>
+    <tagline>Document intake, OCR, tagging, and search.</tagline>
+    <description>Turn scans and PDFs into an indexed personal document archive.</description>
+    <port>8010</port>
+    <path></path>
+    <weight>Medium</weight>
+    <image>ghcr.io/paperless-ngx/paperless-ngx:latest</image>
+    <website>https://docs.paperless-ngx.com</website>
+    <repository>https://github.com/paperless-ngx/paperless-ngx</repository>
+    <docs>https://docs.paperless-ngx.com</docs>
+  </app>
+  <app id="mealie">
+    <name>Mealie</name>
+    <category>Productivity</category>
+    <tagline>Recipe manager and meal planner.</tagline>
+    <description>Save recipes, plan meals, and build shopping lists.</description>
+    <port>9925</port>
+    <path></path>
+    <weight>Light</weight>
+    <image>ghcr.io/mealie-recipes/mealie:latest</image>
+    <website>https://mealie.io</website>
+    <repository>https://github.com/mealie-recipes/mealie</repository>
+    <docs>https://docs.mealie.io</docs>
+  </app>
+  <app id="home-assistant">
+    <name>Home Assistant</name>
+    <category>Smart Home</category>
+    <tagline>Local-first smart home control.</tagline>
+    <description>Automate and control smart home devices from your server.</description>
+    <port>8123</port>
+    <path></path>
+    <weight>Medium</weight>
+    <image>ghcr.io/home-assistant/home-assistant:stable</image>
+    <website>https://www.home-assistant.io</website>
+    <repository>https://github.com/home-assistant/core</repository>
+    <docs>https://www.home-assistant.io/docs</docs>
   </app>
 </appstore>

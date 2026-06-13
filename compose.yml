@@ -24,6 +24,7 @@ services:
       PORT: 3000
       REDIS_URL: redis://redis:6379
       CORTOPIA_HOME: ${CORTOPIA_HOME:-/opt/cortopia}
+      CORTOPIA_BRANCH: ${CORTOPIA_BRANCH:-main}
       CORTOPIA_APPSTORE_URL: ${CORTOPIA_APPSTORE_URL:-https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/appstore.xml}
     ports:
       - "${CORTOPIA_PORT:-8080}:3000"

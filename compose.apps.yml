@@ -27,6 +27,84 @@ services:
     volumes:
       - ./data/jellyseerr:/app/config
 
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: cortopia-sonarr
+    restart: unless-stopped
+    profiles: ["sonarr"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./data/sonarr:/config
+      - ./media/tv:/tv
+      - ./downloads:/downloads
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: cortopia-radarr
+    restart: unless-stopped
+    profiles: ["radarr"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "7878:7878"
+    volumes:
+      - ./data/radarr:/config
+      - ./media/movies:/movies
+      - ./downloads:/downloads
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: cortopia-lidarr
+    restart: unless-stopped
+    profiles: ["lidarr"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8686:8686"
+    volumes:
+      - ./data/lidarr:/config
+      - ./music:/music
+      - ./downloads:/downloads
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: cortopia-prowlarr
+    restart: unless-stopped
+    profiles: ["prowlarr"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "9696:9696"
+    volumes:
+      - ./data/prowlarr:/config
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: cortopia-bazarr
+    restart: unless-stopped
+    profiles: ["bazarr"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "6767:6767"
+    volumes:
+      - ./data/bazarr:/config
+      - ./media/movies:/movies
+      - ./media/tv:/tv
+
   navidrome:
     image: deluan/navidrome:latest
     container_name: cortopia-navidrome
@@ -73,6 +151,38 @@ services:
       - ./data/qbittorrent:/config
       - ./downloads:/downloads
 
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:latest
+    container_name: cortopia-sabnzbd
+    restart: unless-stopped
+    profiles: ["sabnzbd"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./data/sabnzbd:/config
+      - ./downloads:/downloads
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: cortopia-transmission
+    restart: unless-stopped
+    profiles: ["transmission"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "9091:9091"
+      - "51413:51413"
+      - "51413:51413/udp"
+    volumes:
+      - ./data/transmission:/config
+      - ./downloads:/downloads
+
   uptime-kuma:
     image: louislam/uptime-kuma:1
     container_name: cortopia-uptime-kuma
@@ -83,6 +193,49 @@ services:
     volumes:
       - ./data/uptime-kuma:/app/data
 
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: cortopia-homepage
+    restart: unless-stopped
+    profiles: ["homepage"]
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./data/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: cortopia-dozzle
+    restart: unless-stopped
+    profiles: ["dozzle"]
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: cortopia-portainer
+    restart: unless-stopped
+    profiles: ["portainer"]
+    ports:
+      - "9443:9443"
+    volumes:
+      - ./data/portainer:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: cortopia-watchtower
+    restart: unless-stopped
+    profiles: ["watchtower"]
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   filebrowser:
     image: filebrowser/filebrowser:latest
     container_name: cortopia-filebrowser
@@ -90,8 +243,116 @@ services:
     profiles: ["filebrowser"]
     ports:
       - "8095:80"
+    command: ["--database", "/config/filebrowser.db", "--root", "/srv"]
     volumes:
       - ./:/srv
-      - ./data/filebrowser/database.db:/database.db
-      - ./data/filebrowser/settings.json:/config/settings.json
+      - ./data/filebrowser:/config
 
+  nextcloud:
+    image: nextcloud:apache
+    container_name: cortopia-nextcloud
+    restart: unless-stopped
+    profiles: ["nextcloud"]
+    ports:
+      - "8084:80"
+    volumes:
+      - ./data/nextcloud:/var/www/html
+
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:latest
+    container_name: cortopia-syncthing
+    restart: unless-stopped
+    profiles: ["syncthing"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8384:8384"
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+    volumes:
+      - ./data/syncthing:/config
+      - ./sync:/sync
+
+  calibre-web:
+    image: lscr.io/linuxserver/calibre-web:latest
+    container_name: cortopia-calibre-web
+    restart: unless-stopped
+    profiles: ["calibre-web"]
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./data/calibre-web:/config
+      - ./books:/books
+
+  photoprism:
+    image: photoprism/photoprism:latest
+    container_name: cortopia-photoprism
+    restart: unless-stopped
+    profiles: ["photoprism"]
+    environment:
+      - PHOTOPRISM_ADMIN_PASSWORD=changeme
+      - PHOTOPRISM_SITE_URL=http://localhost:2342/
+      - PHOTOPRISM_DISABLE_TLS=true
+    ports:
+      - "2342:2342"
+    volumes:
+      - ./photos:/photoprism/originals
+      - ./data/photoprism:/photoprism/storage
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: cortopia-vaultwarden
+    restart: unless-stopped
+    profiles: ["vaultwarden"]
+    ports:
+      - "8085:80"
+    volumes:
+      - ./data/vaultwarden:/data
+
+  paperless-ngx:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    container_name: cortopia-paperless-ngx
+    restart: unless-stopped
+    profiles: ["paperless-ngx"]
+    environment:
+      - PAPERLESS_REDIS=redis://redis:6379
+      - PAPERLESS_SECRET_KEY=change-me
+      - PAPERLESS_URL=http://localhost:8010
+    ports:
+      - "8010:8000"
+    volumes:
+      - ./data/paperless/data:/usr/src/paperless/data
+      - ./data/paperless/media:/usr/src/paperless/media
+      - ./documents/export:/usr/src/paperless/export
+      - ./documents/consume:/usr/src/paperless/consume
+
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: cortopia-mealie
+    restart: unless-stopped
+    profiles: ["mealie"]
+    environment:
+      - ALLOW_SIGNUP=true
+      - TZ=${TZ:-Europe/London}
+    ports:
+      - "9925:9000"
+    volumes:
+      - ./data/mealie:/app/data
+
+  home-assistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: cortopia-home-assistant
+    restart: unless-stopped
+    profiles: ["home-assistant"]
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./data/home-assistant:/config
+      - /etc/localtime:/etc/localtime:ro
